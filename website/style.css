@@ -1,0 +1,40 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #000000; /* Black background */
+    color: #ffffff; /* White text for contrast */
+}
+
+h1 {
+    color: #ffffff; /* White heading */
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    background-color: #1c1c1c; /* Dark gray for list items */
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1); /* Subtle white shadow for UI elements on black bg */
+}
+
+a {
+    text-decoration: none;
+    color: #007BFF; /* Blue links */
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+section {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #1c1c1c; /* Dark sections */
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1); /* Shadow on sections */
+}
