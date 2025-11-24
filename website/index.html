@@ -13,15 +13,9 @@
     <script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-    <!-- Optional Background Music Player (mimic wound.lol's music feature) -->
-    <audio id="bg-music" loop autoplay muted>
-        <source src="https://example.com/your-music.mp3" type="audio/mpeg"> <!-- Replace with a public MP3 URL -->
-    </audio>
-    <button onclick="toggleMusic()" style="position: fixed; top: 10px; right: 10px; z-index: 100;">Toggle Music</button>
-
     <h1>Welcome to My Website</h1>
 
-    <!-- Login Section -->
+    <!-- Login Section (visible on all pages) -->
     <section id="auth-section">
         <h2>Login or Sign Up</h2>
         <form id="auth-form">
@@ -34,13 +28,13 @@
         <p id="auth-message"></p>
     </section>
 
-    <p>Here's a list of sections:</p>
-    <ul>
-        <li><a href="#stories">Stories</a></li>
-        <li><a href="#memes">Memes</a></li>
+    <p id="nav-intro" style="display: block;">Here's a list of sections:</p>
+    <ul id="nav-list" style="display: block;">
+        <li><a href="/stories">Stories</a></li>
+        <li><a href="/memes">Memes</a></li>
     </ul>
 
-    <section id="stories">
+    <section id="stories" style="display: block;">
         <h2>Stories</h2>
         <div id="stories-list"></div>
         <form id="story-form" style="display: none;">
@@ -50,7 +44,7 @@
         </form>
     </section>
 
-    <section id="memes">
+    <section id="memes" style="display: block;">
         <h2>Memes</h2>
         <div id="memes-list"></div>
         <form id="meme-form" style="display: none;">
@@ -62,21 +56,58 @@
     </section>
 
     <script>
-        // Your existing script here (no changes needed, but add this for music)
-        function toggleMusic() {
-            const audio = document.getElementById('bg-music');
-            if (audio.paused) {
-                audio.play();
+        // Your Firebase config and auth/post/load functions remain the same—paste them here
+        const firebaseConfig = {
+            // YOUR ACTUAL CONFIG HERE
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const FAKE_DOMAIN = 'fake.com';
+
+        // Auth state listener (unchanged)
+        auth.onAuthStateChanged((user) => {
+            // ... (your existing code) ...
+            loadStories();
+            loadMemes();
+        });
+
+        // signUp, login, logout, postStory, postMeme, loadStories, loadMemes functions (unchanged)
+        // ... paste them here ...
+
+        // New: Handle "routing" based on path
+        function handleRouting() {
+            const path = window.location.pathname;
+            const storiesSection = document.getElementById('stories');
+            const memesSection = document.getElementById('memes');
+            const navIntro = document.getElementById('nav-intro');
+            const navList = document.getElementById('nav-list');
+
+            if (path === '/stories') {
+                storiesSection.style.display = 'block';
+                memesSection.style.display = 'none';
+                navIntro.style.display = 'none';
+                navList.style.display = 'none';
+            } else if (path === '/memes') {
+                storiesSection.style.display = 'none';
+                memesSection.style.display = 'block';
+                navIntro.style.display = 'none';
+                navList.style.display = 'none';
             } else {
-                audio.pause();
+                // Default '/' shows everything
+                storiesSection.style.display = 'block';
+                memesSection.style.display = 'block';
+                navIntro.style.display = 'block';
+                navList.style.display = 'block';
             }
         }
 
-        // Paste your full script from previous (Firebase config, auth, post functions, etc.)
-        const firebaseConfig = {
-            // YOUR CONFIG HERE
-        };
-        // ... rest of script ...
+        // Call on load
+        handleRouting();
+
+        // Load content (always load both, but visibility is controlled)
+        loadStories();
+        loadMemes();
     </script>
 </body>
 </html>
