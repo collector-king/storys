@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Simple Website</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 
     <!-- Firebase SDKs -->
@@ -12,6 +13,12 @@
     <script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
+    <!-- Optional Background Music Player (mimic wound.lol's music feature) -->
+    <audio id="bg-music" loop autoplay muted>
+        <source src="https://example.com/your-music.mp3" type="audio/mpeg"> <!-- Replace with a public MP3 URL -->
+    </audio>
+    <button onclick="toggleMusic()" style="position: fixed; top: 10px; right: 10px; z-index: 100;">Toggle Music</button>
+
     <h1>Welcome to My Website</h1>
 
     <!-- Login Section -->
@@ -55,135 +62,21 @@
     </section>
 
     <script>
-        // Replace with your Firebase config
-        const firebaseConfig = {
-            // PASTE YOUR CONFIG HERE
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        const FAKE_DOMAIN = 'fake.com'; // Fake domain for auth
-
-        // Auth state listener
-        auth.onAuthStateChanged((user) => {
-            const authSection = document.getElementById('auth-section');
-            const storyForm = document.getElementById('story-form');
-            const memeForm = document.getElementById('meme-form');
-            const logoutBtn = document.getElementById('logout');
-            const authMessage = document.getElementById('auth-message');
-
-            if (user) {
-                const displayName = user.email.split('@')[0];
-                authMessage.textContent = `Logged in as ${displayName}`;
-                authSection.querySelector('form').style.display = 'none';
-                logoutBtn.style.display = 'block';
-                storyForm.style.display = 'block';
-                memeForm.style.display = 'block';
+        // Your existing script here (no changes needed, but add this for music)
+        function toggleMusic() {
+            const audio = document.getElementById('bg-music');
+            if (audio.paused) {
+                audio.play();
             } else {
-                authMessage.textContent = '';
-                authSection.querySelector('form').style.display = 'block';
-                logoutBtn.style.display = 'none';
-                storyForm.style.display = 'none';
-                memeForm.style.display = 'none';
+                audio.pause();
             }
-            loadStories();
-            loadMemes();
-        });
-
-        function signUp() {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            if (!username || username.includes('@')) {
-                alert('Invalid username: No @ allowed and cannot be empty.');
-                return;
-            }
-            const email = `${username}@${FAKE_DOMAIN}`;
-
-            // Check if username is taken (via email existence, but since auth handles uniqueness)
-            auth.createUserWithEmailAndPassword(email, password)
-                .then(() => alert('Signed up successfully!'))
-                .catch((error) => alert(error.message));
         }
 
-        function login() {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            if (!username || username.includes('@')) {
-                alert('Invalid username: No @ allowed and cannot be empty.');
-                return;
-            }
-            const email = `${username}@${FAKE_DOMAIN}`;
-
-            auth.signInWithEmailAndPassword(email, password)
-                .then(() => alert('Logged in successfully!'))
-                .catch((error) => alert(error.message));
-        }
-
-        function logout() {
-            auth.signOut().then(() => alert('Logged out!'));
-        }
-
-        function postStory() {
-            const content = document.getElementById('story-content').value;
-            const displayName = auth.currentUser.email.split('@')[0];
-            db.collection('stories').add({
-                content: content,
-                user: displayName,
-                timestamp: new Date()
-            }).then(() => {
-                alert('Story posted!');
-                document.getElementById('story-content').value = '';
-                loadStories();
-            }).catch((error) => alert(error.message));
-        }
-
-        function postMeme() {
-            const url = document.getElementById('meme-url').value;
-            const caption = document.getElementById('meme-caption').value;
-            const displayName = auth.currentUser.email.split('@')[0];
-            db.collection('memes').add({
-                url: url,
-                caption: caption,
-                user: displayName,
-                timestamp: new Date()
-            }).then(() => {
-                alert('Meme posted!');
-                document.getElementById('meme-url').value = '';
-                document.getElementById('meme-caption').value = '';
-                loadMemes();
-            }).catch((error) => alert(error.message));
-        }
-
-        function loadStories() {
-            const storiesList = document.getElementById('stories-list');
-            storiesList.innerHTML = '';
-            db.collection('stories').orderBy('timestamp', 'desc').get().then((snapshot) => {
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const div = document.createElement('div');
-                    div.innerHTML = `<p>${data.content}</p><small>By ${data.user}</small><hr>`;
-                    storiesList.appendChild(div);
-                });
-            });
-        }
-
-        function loadMemes() {
-            const memesList = document.getElementById('memes-list');
-            memesList.innerHTML = '';
-            db.collection('memes').orderBy('timestamp', 'desc').get().then((snapshot) => {
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const div = document.createElement('div');
-                    div.innerHTML = `<img src="${data.url}" alt="Meme" style="max-width: 300px;"><p>${data.caption || ''}</p><small>By ${data.user}</small><hr>`;
-                    memesList.appendChild(div);
-                });
-            });
-        }
-
-        // Load content on page load
-        loadStories();
-        loadMemes();
+        // Paste your full script from previous (Firebase config, auth, post functions, etc.)
+        const firebaseConfig = {
+            // YOUR CONFIG HERE
+        };
+        // ... rest of script ...
     </script>
 </body>
 </html>
