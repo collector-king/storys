@@ -1,41 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="style.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Simple Website</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f4;
-        }
-        h1 {
-            color: #333;
-        }
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        li {
-            background-color: #fff;
-            margin: 10px 0;
-            padding: 15px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        a {
-            text-decoration: none;
-            color: #007BFF;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
     <h1>Welcome to My Website</h1>
+
+    <!-- Login Section -->
+    <section id="auth-section">
+        <h2>Login or Sign Up</h2>
+        <form id="auth-form">
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="button" onclick="signUp()">Sign Up</button>
+            <button type="button" onclick="login()">Login</button>
+        </form>
+        <button id="logout" style="display: none;" onclick="logout()">Logout</button>
+        <p id="auth-message"></p>
+    </section>
+
     <p>Here's a list of sections:</p>
     <ul>
         <li><a href="#stories">Stories</a></li>
@@ -44,12 +35,138 @@
 
     <section id="stories">
         <h2>Stories</h2>
-        <p>This section would contain stories. Add your content here!</p>
+        <div id="stories-list"></div>
+        <form id="story-form" style="display: none;">
+            <h3>Post a Story</h3>
+            <textarea id="story-content" placeholder="Your story..." required></textarea>
+            <button type="button" onclick="postStory()">Post Story</button>
+        </form>
     </section>
 
     <section id="memes">
         <h2>Memes</h2>
-        <p>This section would contain memes. Add your images or links here!</p>
+        <div id="memes-list"></div>
+        <form id="meme-form" style="display: none;">
+            <h3>Post a Meme</h3>
+            <input type="text" id="meme-url" placeholder="Meme image URL" required>
+            <textarea id="meme-caption" placeholder="Caption (optional)"></textarea>
+            <button type="button" onclick="postMeme()">Post Meme</button>
+        </form>
     </section>
+
+    <script>
+        // Replace with your Firebase config from Step 1
+        const firebaseConfig = {
+            // PASTE YOUR CONFIG HERE
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Auth state listener
+        auth.onAuthStateChanged((user) => {
+            const authSection = document.getElementById('auth-section');
+            const storyForm = document.getElementById('story-form');
+            const memeForm = document.getElementById('meme-form');
+            const logoutBtn = document.getElementById('logout');
+            const authMessage = document.getElementById('auth-message');
+
+            if (user) {
+                authMessage.textContent = `Logged in as ${user.email}`;
+                authSection.querySelector('form').style.display = 'none';
+                logoutBtn.style.display = 'block';
+                storyForm.style.display = 'block';
+                memeForm.style.display = 'block';
+            } else {
+                authMessage.textContent = '';
+                authSection.querySelector('form').style.display = 'block';
+                logoutBtn.style.display = 'none';
+                storyForm.style.display = 'none';
+                memeForm.style.display = 'none';
+            }
+            loadStories();
+            loadMemes();
+        });
+
+        function signUp() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            auth.createUserWithEmailAndPassword(email, password)
+                .then(() => alert('Signed up successfully!'))
+                .catch((error) => alert(error.message));
+        }
+
+        function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => alert('Logged in successfully!'))
+                .catch((error) => alert(error.message));
+        }
+
+        function logout() {
+            auth.signOut().then(() => alert('Logged out!'));
+        }
+
+        function postStory() {
+            const content = document.getElementById('story-content').value;
+            db.collection('stories').add({
+                content: content,
+                user: auth.currentUser.email,
+                timestamp: new Date()
+            }).then(() => {
+                alert('Story posted!');
+                document.getElementById('story-content').value = '';
+                loadStories();
+            }).catch((error) => alert(error.message));
+        }
+
+        function postMeme() {
+            const url = document.getElementById('meme-url').value;
+            const caption = document.getElementById('meme-caption').value;
+            db.collection('memes').add({
+                url: url,
+                caption: caption,
+                user: auth.currentUser.email,
+                timestamp: new Date()
+            }).then(() => {
+                alert('Meme posted!');
+                document.getElementById('meme-url').value = '';
+                document.getElementById('meme-caption').value = '';
+                loadMemes();
+            }).catch((error) => alert(error.message));
+        }
+
+        function loadStories() {
+            const storiesList = document.getElementById('stories-list');
+            storiesList.innerHTML = '';
+            db.collection('stories').orderBy('timestamp', 'desc').get().then((snapshot) => {
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const div = document.createElement('div');
+                    div.innerHTML = `<p>${data.content}</p><small>By ${data.user}</small><hr>`;
+                    storiesList.appendChild(div);
+                });
+            });
+        }
+
+        function loadMemes() {
+            const memesList = document.getElementById('memes-list');
+            memesList.innerHTML = '';
+            db.collection('memes').orderBy('timestamp', 'desc').get().then((snapshot) => {
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const div = document.createElement('div');
+                    div.innerHTML = `<img src="${data.url}" alt="Meme" style="max-width: 300px;"><p>${data.caption || ''}</p><small>By ${data.user}</small><hr>`;
+                    memesList.appendChild(div);
+                });
+            });
+        }
+
+        // Load content on page load
+        loadStories();
+        loadMemes();
+    </script>
 </body>
 </html>
