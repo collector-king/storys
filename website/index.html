@@ -3,111 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Simple Website</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore-compat.js"></script>
+    <title>Discord Webhook Tester</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: #16213e;
+            padding: 30px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #5865f2;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 8px;
+            background: #0f3460;
+            color: #fff;
+            font-size: 14px;
+        }
+        input:focus, textarea:focus {
+            outline: 2px solid #5865f2;
+        }
+        textarea { resize: vertical; min-height: 100px; }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #5865f2;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover { background: #4752c4; }
+        button:disabled { background: #555; cursor: not-allowed; }
+        .status {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+        .status.success { display: block; background: #2d6a4f; }
+        .status.error { display: block; background: #9b2226; }
+        .optional { color: #888; font-size: 12px; }
+    </style>
 </head>
 <body>
-    <h1>Welcome to My Website</h1>
-
-    <!-- Login Section (visible on all pages) -->
-    <section id="auth-section">
-        <h2>Login or Sign Up</h2>
-        <form id="auth-form">
-            <input type="text" id="username" placeholder="Username" required>
-            <input type="password" id="password" placeholder="Password" required>
-            <button type="button" onclick="signUp()">Sign Up</button>
-            <button type="button" onclick="login()">Login</button>
-        </form>
-        <button id="logout" style="display: none;" onclick="logout()">Logout</button>
-        <p id="auth-message"></p>
-    </section>
-
-    <p id="nav-intro" style="display: block;">Here's a list of sections:</p>
-    <ul id="nav-list" style="display: block;">
-        <li><a href="/stories">Stories</a></li>
-        <li><a href="/memes">Memes</a></li>
-    </ul>
-
-    <section id="stories" style="display: block;">
-        <h2>Stories</h2>
-        <div id="stories-list"></div>
-        <form id="story-form" style="display: none;">
-            <h3>Post a Story</h3>
-            <textarea id="story-content" placeholder="Your story..." required></textarea>
-            <button type="button" onclick="postStory()">Post Story</button>
-        </form>
-    </section>
-
-    <section id="memes" style="display: block;">
-        <h2>Memes</h2>
-        <div id="memes-list"></div>
-        <form id="meme-form" style="display: none;">
-            <h3>Post a Meme</h3>
-            <input type="text" id="meme-url" placeholder="Meme image URL" required>
-            <textarea id="meme-caption" placeholder="Caption (optional)"></textarea>
-            <button type="button" onclick="postMeme()">Post Meme</button>
-        </form>
-    </section>
+    <div class="container">
+        <h1>🔗 Webhook Tester</h1>
+        
+        <label>Webhook URL *</label>
+        <input type="text" id="webhookUrl" placeholder="https://discord.com/api/webhooks/1446823123121864814/SmvasyrJAbz389x0pCC-kC7C8sG080ipmOJxravxUM5oTC7ghbiCUY43S6KNvh2L3Jah">
+        
+        <label>Message *</label>
+        <textarea id="message" placeholder="Hello from webhook tester!">Test message from webhook tester!</textarea>
+        
+        <label>Username <span class="optional">(optional)</span></label>
+        <input type="text" id="username" placeholder="Webhook Bot">
+        
+        <label>Avatar URL <span class="optional">(optional)</span></label>
+        <input type="text" id="avatarUrl" placeholder="https://example.com/avatar.png">
+        
+        <button id="sendBtn" onclick="sendWebhook()">Send Webhook</button>
+        
+        <div id="status" class="status"></div>
+    </div>
 
     <script>
-        // Your Firebase config and auth/post/load functions remain the same—paste them here
-        const firebaseConfig = {
-            // YOUR ACTUAL CONFIG HERE
-        };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        const FAKE_DOMAIN = 'fake.com';
+        async function sendWebhook() {
+            const webhookUrl = document.getElementById('webhookUrl').value.trim();
+            const message = document.getElementById('message').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const avatarUrl = document.getElementById('avatarUrl').value.trim();
+            const statusEl = document.getElementById('status');
+            const btn = document.getElementById('sendBtn');
 
-        // Auth state listener (unchanged)
-        auth.onAuthStateChanged((user) => {
-            // ... (your existing code) ...
-            loadStories();
-            loadMemes();
-        });
-
-        // signUp, login, logout, postStory, postMeme, loadStories, loadMemes functions (unchanged)
-        // ... paste them here ...
-
-        // New: Handle "routing" based on path
-        function handleRouting() {
-            const path = window.location.pathname;
-            const storiesSection = document.getElementById('stories');
-            const memesSection = document.getElementById('memes');
-            const navIntro = document.getElementById('nav-intro');
-            const navList = document.getElementById('nav-list');
-
-            if (path === '/stories') {
-                storiesSection.style.display = 'block';
-                memesSection.style.display = 'none';
-                navIntro.style.display = 'none';
-                navList.style.display = 'none';
-            } else if (path === '/memes') {
-                storiesSection.style.display = 'none';
-                memesSection.style.display = 'block';
-                navIntro.style.display = 'none';
-                navList.style.display = 'none';
-            } else {
-                // Default '/' shows everything
-                storiesSection.style.display = 'block';
-                memesSection.style.display = 'block';
-                navIntro.style.display = 'block';
-                navList.style.display = 'block';
+            if (!webhookUrl || !message) {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ Webhook URL and message are required!';
+                return;
             }
+
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+            statusEl.className = 'status';
+            statusEl.style.display = 'none';
+
+            const payload = { content: message };
+            if (username) payload.username = username;
+            if (avatarUrl) payload.avatar_url = avatarUrl;
+
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok || response.status === 204) {
+                    statusEl.className = 'status success';
+                    statusEl.textContent = '✅ Webhook sent successfully!';
+                } else {
+                    const error = await response.text();
+                    statusEl.className = 'status error';
+                    statusEl.textContent = `❌ Error ${response.status}: ${error.slice(0, 100)}`;
+                }
+            } catch (err) {
+                statusEl.className = 'status error';
+                statusEl.textContent = `❌ Failed: ${err.message}`;
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'Send Webhook';
         }
-
-        // Call on load
-        handleRouting();
-
-        // Load content (always load both, but visibility is controlled)
-        loadStories();
-        loadMemes();
     </script>
 </body>
 </html>
